@@ -10,14 +10,18 @@ type Props = {
   onUpdate?: (updated: Internship) => void;
 };
 
-export default function InternshipList({ internships, apiUrl = 'http://localhost:3000/internship', onUpdate }: Props) {
+export default function InternshipList({
+  internships,
+  apiUrl = 'http://localhost:3000/internship',
+  onUpdate,
+}: Props) {
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>();
   const [selectedService, setSelectedService] = useState<string | undefined>();
   const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null);
   const [localInternships, setLocalInternships] = useState(internships);
   const [loading, setLoading] = useState(false);
 
-  // Récupère les valeurs uniques pour les filtres
+  // Valeurs uniques pour filtres
   const statuses = Array.from(new Set(localInternships.map((i) => i.status).filter(Boolean)));
   const services = Array.from(new Set(localInternships.map((i) => i.service).filter(Boolean)));
 
@@ -28,31 +32,38 @@ export default function InternshipList({ internships, apiUrl = 'http://localhost
     return statusMatch && serviceMatch;
   });
 
-  const handleAccept = async () => {
+  const handleStatusChange = async (newStatus: 'APPROVED' | 'REJECTED') => {
     if (!selectedInternship) return;
-
     setLoading(true);
-    try {
-      const updated = { ...selectedInternship, status: 'acceptee' };
 
-      // 🔄 Mise à jour locale immédiate
+    try {
+      const updated = { ...selectedInternship, status: newStatus };
+
+      // Mise à jour locale immédiate
       setLocalInternships((prev) =>
         prev.map((i) => (i.id === updated.id ? updated : i))
       );
 
-      // 🌐 Mise à jour serveur
+      // Appel serveur
       const res = await fetch(`${apiUrl}/${selectedInternship.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'acceptée' }),
+        body: JSON.stringify({ status: newStatus }),
       });
 
-      if (!res.ok) {
-        throw new Error(`Erreur serveur : ${res.status}`);
-      }
+      if (!res.ok) throw new Error(`Erreur serveur : ${res.status}`);
 
-      message.success('Demande acceptée ✅');
-      setSelectedInternship(updated);
+      // Succès
+      message.success(
+        newStatus === 'APPROVED' ? '✅ Demande acceptée' : '❌ Demande refusée',
+        2
+      );
+
+      // Ferme la modale après 2 secondes
+      setTimeout(() => {
+        setSelectedInternship(null);
+      }, 2000);
+
       if (onUpdate) onUpdate(updated);
     } catch (err) {
       console.error(err);
@@ -99,7 +110,7 @@ export default function InternshipList({ internships, apiUrl = 'http://localhost
         </Select>
       </Space>
 
-      {/* Liste des demandes */}
+      {/* Liste */}
       <List
         grid={{ gutter: 16, column: 1 }}
         dataSource={filteredInternships}
@@ -115,13 +126,22 @@ export default function InternshipList({ internships, apiUrl = 'http://localhost
                 Du {new Date(item.dateDebut).toLocaleDateString()} au{' '}
                 {new Date(item.dateFin).toLocaleDateString()}
               </p>
-              {item.status && <p>Status: {item.status}</p>}
+              <p>
+                Statut:{' '}
+                <b>
+                  {item.status === 'PENDING'
+                    ? 'En attente'
+                    : item.status === 'APPROVED'
+                    ? 'Approuvée'
+                    : 'Refusée'}
+                </b>
+              </p>
             </Card>
           </List.Item>
         )}
       />
 
-      {/* Modal Détails */}
+      {/* Modal détails */}
       <Modal
         open={!!selectedInternship}
         title={
@@ -131,15 +151,25 @@ export default function InternshipList({ internships, apiUrl = 'http://localhost
         }
         onCancel={() => setSelectedInternship(null)}
         footer={[
-          selectedInternship?.status !== 'acceptée' && (
-            <Button
-              key="accept"
-              type="primary"
-              loading={loading}
-              onClick={handleAccept}
-            >
-              Accepter la demande
-            </Button>
+          selectedInternship?.status === 'PENDING' && (
+            <>
+              <Button
+                key="approve"
+                type="primary"
+                loading={loading}
+                onClick={() => handleStatusChange('APPROVED')}
+              >
+                Accepter
+              </Button>
+              <Button
+                key="reject"
+                danger
+                loading={loading}
+                onClick={() => handleStatusChange('REJECTED')}
+              >
+                Refuser
+              </Button>
+            </>
           ),
           <Button key="close" onClick={() => setSelectedInternship(null)}>
             Fermer
@@ -159,11 +189,13 @@ export default function InternshipList({ internships, apiUrl = 'http://localhost
                 {selectedInternship.motivation}
               </Descriptions.Item>
             )}
-            {selectedInternship.status && (
-              <Descriptions.Item label="Status">
-                {selectedInternship.status}
-              </Descriptions.Item>
-            )}
+            <Descriptions.Item label="Statut">
+              {selectedInternship.status === 'pending'
+                ? 'En attente'
+                : selectedInternship.status === 'acceptee'
+                ? 'Approuvée'
+                : 'Refusée'}
+            </Descriptions.Item>
           </Descriptions>
         )}
       </Modal>
