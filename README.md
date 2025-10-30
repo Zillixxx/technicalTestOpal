@@ -10,14 +10,17 @@
 
 OU 
 
-0) Copier `.env.example` en `.env`
-0) Remplir l'adresse de sa base de données
-1) cd frontend
-2) npm run dev
-3) cd ..
-4) cd backend
-5) npx prisma dev
-6) npm run start
+1) Copier `.env.example` en `.env`
+2) Remplir l'adresse de sa base de données
+3) cd frontend
+4) npm i
+5) npm run dev
+6) cd ..
+7) cd backend
+8) npm i
+9) npx prisma dev
+10) npx prisma generate ( sur un autre terminal backend)
+11) npm run start
 
 ---
 
