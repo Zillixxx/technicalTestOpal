@@ -7,6 +7,18 @@
 3) `docker compose up --build`
 4) Prier 🙏
 
+
+OU 
+
+0) Copier `.env.example` en `.env`
+0) Remplir l'adresse de sa base de données
+1) cd frontend
+2) npm run dev
+3) cd ..
+4) cd backend
+5) npx prisma dev
+6) npm run start
+
 ---
 
 
