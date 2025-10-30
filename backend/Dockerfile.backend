@@ -1,0 +1,44 @@
+# Stage 1 : build
+FROM node:22-alpine AS builder
+
+# Installer des dépendances nécessaires pour Prisma et build
+RUN apk add --no-cache git bash libc6-compat
+
+WORKDIR /app
+
+# Copier package.json et package-lock.json pour installer les dépendances
+COPY package*.json ./
+
+# Installer toutes les dépendances (dev + prod)
+RUN npm ci
+
+# Copier Prisma et le reste du code
+COPY prisma ./prisma
+COPY . .
+
+# Générer le client Prisma
+RUN npx prisma generate
+
+# Stage final : production
+FROM node:22-alpine
+
+WORKDIR /app
+
+# Installer uniquement les dépendances de production
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Installer ts-node et typescript si tu dois garder des fichiers .ts (optionnel)
+# RUN npm install -g ts-node typescript
+
+# Copier le reste depuis le builder
+COPY --from=builder /app ./
+
+# Rendre le script wait-for-db.sh exécutable
+RUN chmod +x ./wait-for-db.sh
+
+# Exposer le port du backend
+EXPOSE 3000
+
+# Lancer le backend : attendre la DB, appliquer les migrations Prisma, puis démarrer
+CMD ["./wait-for-db.sh", "db", "5432", "30", "sh", "-c", "npx prisma migrate deploy && npm start"]

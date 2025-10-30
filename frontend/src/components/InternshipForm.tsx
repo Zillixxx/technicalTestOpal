@@ -23,7 +23,7 @@ type Props = {
 
 export default function InternshipForm({
   onCreated,
-  apiUrl = 'http://localhost:3000/internship',
+  apiUrl = 'http://localhost:3000/api/internship',
 }: Props): JSX.Element {
   const [form] = Form.useForm<FormValues>();
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);

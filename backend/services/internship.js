@@ -46,11 +46,22 @@ async function createInternship(body) {
 async function updateInternship(id, partial) {
   const nid = toInt(id);
   if (nid === null) return null;
+
+  // Vérifie si le stage existe
   const exists = await prisma.internship.findUnique({ where: { id: nid } });
   if (!exists) return null;
-  const data = { ...partial };
-  if (partial.dateDebut) data.dateDebut = new Date(partial.dateDebut);
-  if (partial.dateFin) data.dateFin = new Date(partial.dateFin);
+
+  // Préparer les données à mettre à jour
+  const data = {};
+  if (partial.nom !== undefined) data.nom = partial.nom;
+  if (partial.prenom !== undefined) data.prenom = partial.prenom;
+  if (partial.email !== undefined) data.email = partial.email;
+  if (partial.service !== undefined) data.service = partial.service;
+  if (partial.dateDebut !== undefined) data.dateDebut = partial.dateDebut ? new Date(partial.dateDebut) : null;
+  if (partial.dateFin !== undefined) data.dateFin = partial.dateFin ? new Date(partial.dateFin) : null;
+  if (partial.motivation !== undefined) data.motivation = partial.motivation;
+  if (partial.status !== undefined) data.status = partial.status;
+
   return prisma.internship.update({ where: { id: nid }, data });
 }
 

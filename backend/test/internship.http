@@ -1,4 +1,4 @@
-@host = http://localhost:3000
+@host = http://localhost:3000/api
 
 ### Create demande
 POST {{host}}/internship
@@ -21,12 +21,12 @@ GET {{host}}/internship
 GET {{host}}/internship/1
 
 ### Update status
-PATCH {{host}}/internship/1
+PATCH {{host}}/internship/2
 Content-Type: application/json
 
 {
-  "status": "acceptee"
+  "status": "APPROVED"
 }
 
 ### Delete internship demande
-DELETE {{host}}/internship/4
+DELETE {{host}}/internship/1

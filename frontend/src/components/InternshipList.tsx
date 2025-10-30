@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { List, Card, Select, Space, Modal, Descriptions, Button, message } from 'antd';
 import type { Internship } from '../types/Internship';
 
@@ -12,7 +12,7 @@ type Props = {
 
 export default function InternshipList({
   internships,
-  apiUrl = 'http://localhost:3000/internship',
+  apiUrl = 'http://localhost:3000/api/internship',
   onUpdate,
 }: Props) {
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>();
@@ -190,9 +190,9 @@ export default function InternshipList({
               </Descriptions.Item>
             )}
             <Descriptions.Item label="Statut">
-              {selectedInternship.status === 'pending'
+              {selectedInternship.status === 'PENDING'
                 ? 'En attente'
-                : selectedInternship.status === 'acceptee'
+                : selectedInternship.status === 'APPROVED'
                 ? 'Approuvée'
                 : 'Refusée'}
             </Descriptions.Item>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Typography, Card, Divider, Spin, message } from 'antd';
 import InternshipForm from '../components/InternshipForm';
 import InternshipList from '../components/InternshipList';
