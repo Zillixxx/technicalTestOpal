@@ -1,25 +1,19 @@
 import { useState } from 'react';
-import { List, Card, Select, Space, Modal, Descriptions, Button, message } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { List, Card, Select, Space } from 'antd';
 import type { Internship } from '../types/Internship';
 
 const { Option } = Select;
 
 type Props = {
   internships: Internship[];
-  apiUrl?: string;
-  onUpdate?: (updated: Internship) => void;
 };
 
-export default function InternshipList({
-  internships,
-  apiUrl = 'http://localhost:3000/api/internship',
-  onUpdate,
-}: Props) {
+export default function InternshipList({ internships }: Props) {
+  const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = useState<string | undefined>();
   const [selectedService, setSelectedService] = useState<string | undefined>();
-  const [selectedInternship, setSelectedInternship] = useState<Internship | null>(null);
-  const [localInternships, setLocalInternships] = useState(internships);
-  const [loading, setLoading] = useState(false);
+  const [localInternships] = useState(internships);
 
   // Valeurs uniques pour filtres
   const statuses = Array.from(new Set(localInternships.map((i) => i.status).filter(Boolean)));
@@ -31,47 +25,6 @@ export default function InternshipList({
     const serviceMatch = selectedService ? i.service === selectedService : true;
     return statusMatch && serviceMatch;
   });
-
-  const handleStatusChange = async (newStatus: 'APPROVED' | 'REJECTED') => {
-    if (!selectedInternship) return;
-    setLoading(true);
-
-    try {
-      const updated = { ...selectedInternship, status: newStatus };
-
-      // Mise à jour locale immédiate
-      setLocalInternships((prev) =>
-        prev.map((i) => (i.id === updated.id ? updated : i))
-      );
-
-      // Appel serveur
-      const res = await fetch(`${apiUrl}/${selectedInternship.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!res.ok) throw new Error(`Erreur serveur : ${res.status}`);
-
-      // Succès
-      message.success(
-        newStatus === 'APPROVED' ? '✅ Demande acceptée' : '❌ Demande refusée',
-        2
-      );
-
-      // Ferme la modale après 2 secondes
-      setTimeout(() => {
-        setSelectedInternship(null);
-      }, 2000);
-
-      if (onUpdate) onUpdate(updated);
-    } catch (err) {
-      console.error(err);
-      message.error('Échec de la mise à jour ❌');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (localInternships.length === 0) {
     return <p>Aucune demande pour le moment.</p>;
@@ -119,7 +72,8 @@ export default function InternshipList({
             <Card
               title={`${item.prenom} ${item.nom} (${item.service})`}
               hoverable
-              onClick={() => setSelectedInternship(item)}
+              onClick={() => navigate(`/internship/${item.id}`)}
+              style={{ cursor: 'pointer' }}
             >
               <p>Email: {item.email}</p>
               <p>
@@ -140,65 +94,6 @@ export default function InternshipList({
           </List.Item>
         )}
       />
-
-      {/* Modal détails */}
-      <Modal
-        open={!!selectedInternship}
-        title={
-          selectedInternship
-            ? `${selectedInternship.prenom} ${selectedInternship.nom} (${selectedInternship.service})`
-            : ''
-        }
-        onCancel={() => setSelectedInternship(null)}
-        footer={[
-          selectedInternship?.status === 'PENDING' && (
-            <>
-              <Button
-                key="approve"
-                type="primary"
-                loading={loading}
-                onClick={() => handleStatusChange('APPROVED')}
-              >
-                Accepter
-              </Button>
-              <Button
-                key="reject"
-                danger
-                loading={loading}
-                onClick={() => handleStatusChange('REJECTED')}
-              >
-                Refuser
-              </Button>
-            </>
-          ),
-          <Button key="close" onClick={() => setSelectedInternship(null)}>
-            Fermer
-          </Button>,
-        ]}
-      >
-        {selectedInternship && (
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Email">{selectedInternship.email}</Descriptions.Item>
-            <Descriptions.Item label="Service">{selectedInternship.service}</Descriptions.Item>
-            <Descriptions.Item label="Période">
-              Du {new Date(selectedInternship.dateDebut).toLocaleDateString()} au{' '}
-              {new Date(selectedInternship.dateFin).toLocaleDateString()}
-            </Descriptions.Item>
-            {selectedInternship.motivation && (
-              <Descriptions.Item label="Motivation">
-                {selectedInternship.motivation}
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label="Statut">
-              {selectedInternship.status === 'PENDING'
-                ? 'En attente'
-                : selectedInternship.status === 'APPROVED'
-                ? 'Approuvée'
-                : 'Refusée'}
-            </Descriptions.Item>
-          </Descriptions>
-        )}
-      </Modal>
     </>
   );
 }

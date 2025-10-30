@@ -13,21 +13,23 @@ export default function HomePage() {
 
   // Charger les données depuis le serveur au montage
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await fetchInternships();
-        setInternships(data);
-      } catch (err) {
-        console.error(err);
-        message.error('Impossible de récupérer les demandes.');
-      } finally {
-        setLoading(false);
-      }
-    };
     void loadData();
   }, []);
 
+  const loadData = async () => {
+    try {
+      const data = await fetchInternships();
+      setInternships(data);
+    } catch (err) {
+      console.error(err);
+      message.error('Impossible de récupérer les demandes.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleCreated = (newInternship: Internship) => {
+    // Ajoute immédiatement le nouvel internship au début de la liste
     setInternships((prev) => [newInternship, ...prev]);
   };
 
