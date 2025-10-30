@@ -3,12 +3,20 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+const swaggerConfig = require('./swagger');
 
 const indexRouter = require('./routes/index');
 const usersRouter = require('./routes/users');
 const internshipRouter = require('./routes/internship');
 
 const app = express();
+
+/**
+ * 📚 Configuration Swagger/OpenAPI
+ */
+const swaggerSpec = swaggerJsdoc(swaggerConfig);
 
 /**
  * 🔒 Configuration CORS
@@ -42,6 +50,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+/**
+ * 📖 Documentation Swagger/OpenAPI
+ */
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /**
  * 🚏 Routes principales
