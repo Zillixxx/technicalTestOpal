@@ -41,4 +41,5 @@ RUN chmod +x ./wait-for-db.sh
 EXPOSE 3000
 
 # Lancer le backend : attendre la DB, appliquer les migrations Prisma, puis démarrer
+# Lancer le backend : attendre la DB, appliquer les migrations Prisma, puis démarrer
 CMD ["./wait-for-db.sh", "db", "5432", "30", "sh", "-c", "npx prisma migrate deploy && npm start"]

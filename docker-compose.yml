@@ -36,8 +36,17 @@ services:
         condition: service_healthy
     networks:
       - testOpal_network
-    # Attendre la DB, appliquer les migrations Prisma, puis démarrer le backend
-    command: ["./wait-for-db.sh", "db", "5432", "30", "sh", "-c", "npx prisma migrate deploy && npm start"]
+    # Workaround: run the wait script through sh -c as the service command (let image entrypoint handle exec)
+    # Inline wait loop to avoid issues with script execution under Compose on Windows
+    command:
+      - sh
+      - -c
+      - |
+        until nc -z db 5432; do
+          echo "Waiting for db..."
+          sleep 1
+        done
+        npx prisma migrate deploy && npm start
     restart: unless-stopped
 
   frontend:
