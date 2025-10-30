@@ -24,6 +24,9 @@ FROM node:22-alpine
 
 WORKDIR /app
 
+# Install runtime dependencies required by wait-for-db.sh (nc and bash)
+RUN apk add --no-cache bash netcat-openbsd
+
 # Installer uniquement les dépendances de production
 COPY package*.json ./
 RUN npm ci --only=production
@@ -34,8 +37,9 @@ RUN npm ci --only=production
 # Copier le reste depuis le builder
 COPY --from=builder /app ./
 
-# Rendre le script wait-for-db.sh exécutable
-RUN chmod +x ./wait-for-db.sh
+# Normalise les fins de ligne (CRLF -> LF) et rendre le script wait-for-db.sh exécutable
+# Ceci évite l'erreur "/bin/sh\r: No such file or directory" quand le fichier a des fins de ligne Windows
+RUN sed -i 's/\r$//' ./wait-for-db.sh && chmod +x ./wait-for-db.sh
 
 # Exposer le port du backend
 EXPOSE 3000
