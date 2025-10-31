@@ -11,7 +11,6 @@ export default function HomePage() {
   const [internships, setInternships] = useState<Internship[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Charger les données depuis le serveur au montage
   useEffect(() => {
     void loadData();
   }, []);
@@ -29,7 +28,6 @@ export default function HomePage() {
   };
 
   const handleCreated = (newInternship: Internship) => {
-    // Ajoute immédiatement le nouvel internship au début de la liste
     setInternships((prev) => [newInternship, ...prev]);
   };
 

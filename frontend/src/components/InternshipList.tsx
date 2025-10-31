@@ -15,11 +15,9 @@ export default function InternshipList({ internships }: Props) {
   const [selectedService, setSelectedService] = useState<string | undefined>();
   const [localInternships] = useState(internships);
 
-  // Valeurs uniques pour filtres
   const statuses = Array.from(new Set(localInternships.map((i) => i.status).filter(Boolean)));
   const services = Array.from(new Set(localInternships.map((i) => i.service).filter(Boolean)));
 
-  // Filtrage des données
   const filteredInternships = localInternships.filter((i) => {
     const statusMatch = selectedStatus ? i.status === selectedStatus : true;
     const serviceMatch = selectedService ? i.service === selectedService : true;
