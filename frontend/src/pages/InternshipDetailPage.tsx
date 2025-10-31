@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Descriptions, Button, Spin, message } from 'antd';
 import { ArrowLeftOutlined } from '@ant-design/icons';
 import type { Internship } from '../types/Internship';
-import { fetchInternships } from '../api/internship';
+import { getInternship, updateInternshipStatus } from '../api/internship';
 
 export default function InternshipDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -11,13 +11,17 @@ export default function InternshipDetailPage() {
   const [internship, setInternship] = useState<Internship | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const apiUrl = 'http://localhost:3000/api/internship';
 
   useEffect(() => {
     const loadInternship = async () => {
       try {
-        const data = await fetchInternships();
-        const found = data.find((i) => i.id === Number(id));
+        const nid = Number(id);
+        if (Number.isNaN(nid)) {
+          message.error('ID invalide');
+          navigate('/');
+          return;
+        }
+        const found = await getInternship(nid);
         if (found) {
           setInternship(found);
         } else {
@@ -40,15 +44,7 @@ export default function InternshipDetailPage() {
     setUpdating(true);
 
     try {
-      const res = await fetch(`${apiUrl}/${internship.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      });
-
-      if (!res.ok) throw new Error(`Erreur serveur : ${res.status}`);
-
-      const updated = await res.json();
+      const updated = await updateInternshipStatus(internship.id, newStatus);
       setInternship(updated);
       message.success(
         newStatus === 'APPROVED' ? '✅ Demande acceptée' : '❌ Demande refusée',
@@ -56,9 +52,10 @@ export default function InternshipDetailPage() {
       );
 
       setTimeout(() => navigate('/'), 2000);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      message.error('Échec de la mise à jour ❌');
+      const serverMessage = err?.response?.data?.message ?? err?.message ?? 'Échec de la mise à jour ❌';
+      message.error(String(serverMessage));
     } finally {
       setUpdating(false);
     }

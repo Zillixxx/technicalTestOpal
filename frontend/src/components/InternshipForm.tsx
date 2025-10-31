@@ -2,6 +2,7 @@ import { useState, type JSX } from 'react';
 import { Form, Input, DatePicker, Select, Button, message, Alert } from 'antd';
 import type { Dayjs } from 'dayjs';
 import type { CreateInternshipPayload, Internship } from '../types/Internship';
+import { createInternship } from '../api/internship';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -23,13 +24,12 @@ type Props = {
 
 export default function InternshipForm({
   onCreated,
-  apiUrl = 'http://localhost:3000/api/internship',
 }: Props): JSX.Element {
   const [form] = Form.useForm<FormValues>();
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const onFinish = async (values: FormValues) => {
-    // Vérification des dates au moment de la soumission
     if (!values.dateFin.isAfter(values.dateDebut, 'day')) {
       const msg = 'La date de fin doit être postérieure à la date de début';
       message.error(msg);
@@ -47,28 +47,25 @@ export default function InternshipForm({
       motivation: values.motivation ?? null,
     };
 
+    setSubmitting(true);
     try {
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`HTTP ${res.status} ${text}`);
-      }
-
-      const created: Internship = await res.json();
+      // Use centralized API helper (axios) for consistent config / timeouts
+      const created: Internship = await createInternship(payload);
       message.success('Demande créée avec succès');
       setFeedback({ type: 'success', message: '✅ Demande envoyée et enregistrée avec succès !' });
       form.resetFields();
       if (onCreated) onCreated(created);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      const msg = '❌ Échec de la création. Vérifiez le serveur ou les données saisies.';
-      message.error(msg);
-      setFeedback({ type: 'error', message: msg });
+      const serverMessage =
+        err?.response?.data?.message ??
+        err?.response?.data ??
+        err?.message ??
+        '❌ Échec de la création. Vérifiez le serveur ou les données saisies.';
+      message.error(String(serverMessage));
+      setFeedback({ type: 'error', message: String(serverMessage) });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -130,7 +127,7 @@ export default function InternshipForm({
         </Form.Item>
 
         <Form.Item>
-          <Button type="primary" htmlType="submit">
+          <Button type="primary" htmlType="submit" loading={submitting} disabled={submitting}>
             Créer la demande
           </Button>
         </Form.Item>

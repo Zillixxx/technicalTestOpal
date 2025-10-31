@@ -18,6 +18,12 @@ export async function createInternship(payload: CreateInternshipPayload): Promis
   return res.data;
 }
 
+// Récupérer un internship par id
+export async function getInternship(id: number): Promise<Internship> {
+  const res = await api.get<Internship>(`/internship/${id}`);
+  return res.data;
+}
+
 // Mettre à jour le status d'une demande
 export async function updateInternshipStatus(id: number, status: string): Promise<Internship> {
   const res = await api.patch<Internship>(`/internship/${id}`, { status });
